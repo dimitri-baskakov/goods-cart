@@ -23,35 +23,95 @@
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column class-name="cost-column" width="150px">
+              <el-table-column class-name="cost-column" :width="140">
                 <template slot-scope="scope">
                   <span>
                     {{ scope.row.cost | price }}
                   </span>
                 </template>
               </el-table-column>
+              <el-table-column class-name="cost-column" :width="70">
+                <template slot-scope="scope">
+                  <el-button
+                    :disabled="cart.items.some(el => el.id == scope.row.id)"
+                    :icon="
+                      cart.items.some(el => el.id == scope.row.id)
+                        ? `el-icon-shopping-cart-full`
+                        : `el-icon-shopping-cart-2`
+                    "
+                    @click="addToCart(scope.row)"
+                    circle
+                  ></el-button>
+                </template>
+              </el-table-column>
             </el-table>
           </el-collapse-item>
         </el-collapse>
+      </el-col>
+      <el-col :span="12">
+        <el-table :data="cart.items" style="width: 100%">
+          <el-table-column label="Наименование товара и описание">
+            <template slot-scope="scope">
+              <span>
+                <strong>{{ scope.row.groupName }}.</strong> {{ scope.row.name }}
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column label="Количество">
+            <template slot-scope="scope">
+              <el-input
+                placeholder="Введите количество"
+                v-model="scope.row.quantity"
+              >
+                <template slot="append">шт.</template>
+              </el-input>
+            </template>
+          </el-table-column>
+          <el-table-column label="Цена">
+            <template slot-scope="scope">
+              <span>
+                <strong>{{ scope.row.cost | price }}.</strong> / шт.
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column :width="70">
+            <template slot-scope="scope">
+              <el-button
+                @click="deleteFromCart(scope.row)"
+                icon="el-icon-delete"
+                circle
+              ></el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+        <div class="total-cost">
+          Общая сумма: <b>{{ totalCost | price }}</b>
+        </div>
       </el-col>
     </el-row>
     <br />
     <br />
     <br />
-    <div>{{ goodsParsed }}</div>
+    <!-- <div>{{ goodsParsed }}</div> -->
     <br />
     <br />
-    <div>{{ activeGroups }}</div>
+    <!-- <div>{{ activeGroups }}</div> -->
   </div>
 </template>
 
 <script>
-import { Value } from "@/data/data.json";
-import names from "@/data/names.json";
 import Vue from "vue";
+import names from "@/data/names.json";
+import { Value } from "@/data/data.json";
 
 export default {
   computed: {
+    totalCost: function() {
+      return this.cart.items.reduce(
+        (acc, currItem) => acc + currItem.quantity * currItem.cost,
+        0
+      );
+    },
     goodsParsed: function() {
       let result = {};
       this.goods.forEach(el => {
@@ -64,6 +124,7 @@ export default {
         result[el.G].children.push({
           cost: this.convertToRub(el.C),
           id: el.T,
+          idGroup: el.G,
           inStockQuantity: el.P,
           name: this.names[el.G].B[el.T].N
         });
@@ -75,6 +136,10 @@ export default {
   data() {
     return {
       activeGroups: [],
+      cart: {
+        items: [],
+        totalCost: this.totalCost
+      },
       goods: Value.Goods,
       names: names,
       rates: {
@@ -88,8 +153,20 @@ export default {
     });
   },
   methods: {
+    addToCart(good) {
+      this.cart.items.push({
+        cost: good.cost,
+        groupName: this.names[good.idGroup].G,
+        id: good.id,
+        name: good.name,
+        quantity: 1
+      });
+    },
     convertToRub(val = 0) {
       return val * this.rates.USD;
+    },
+    deleteFromCart(good) {
+      this.cart.items = this.cart.items.filter(el => el.id != good.id);
     }
   },
   name: "PageHome"
@@ -104,4 +181,8 @@ export default {
 .group-header .el-collapse-item__header
   background-color: $color-primary
   font-weight: 700
+  padding-left: 10px
+
+.total-cost
+  margin-top: 40px
 </style>

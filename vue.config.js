@@ -5,7 +5,7 @@ module.exports = {
         sassOptions: {
           includePaths: ["./node_modules"]
         },
-        additionalData: `@import "@/css/_variables.sass"`
+        prependData: `@import "@/css/_variables.sass"`
       }
     }
   }

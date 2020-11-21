@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <div id="nav">
+    <div class="nav">
       <router-link to="/">Главная</router-link> |
       <router-link to="/about">О проекте</router-link>
     </div>
@@ -23,4 +23,7 @@ export default {
   text-align: center
   color: #2c3e50
   margin-top: 60px
+
+.nav
+  margin-bottom: 40px
 </style>

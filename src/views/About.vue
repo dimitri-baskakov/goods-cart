@@ -6,7 +6,7 @@
       показано на рис."пример.png".
     </p>
 
-    <img src="@/assets/images/example.png" alt="" />
+    <img class="description-image" src="@/assets/images/example.png" alt="" />
 
     <p>
       Показанные на рисунке параметры находятся в узле Goods. "C" - цена в
@@ -27,7 +27,7 @@
       находится на одной и той же странице вместе со списком товаров.
     </p>
 
-    <img src="@/assets/images/cart.png" alt="" />
+    <img class="description-image" src="@/assets/images/cart.png" alt="" />
 
     <p>(*)</p>
     <p>
@@ -51,4 +51,7 @@
 <style lang="sass">
 .about
   text-align: justify
+
+.description-image
+  width: 100%
 </style>
