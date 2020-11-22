@@ -13,8 +13,8 @@
             <el-input-number
               :max="80"
               :min="20"
-              :precision="0"
-              :step="1"
+              :precision="2"
+              :step="0.01"
               placeholder="Введите курс"
               step-strictly
               type="number"
@@ -36,6 +36,7 @@
             class="group-header"
             v-for="group in goodsParsed"
           >
+            <!-- :cell-class-name="cellClassName" -->
             <el-table
               :data="group.children"
               :show-header="false"
@@ -49,13 +50,7 @@
                   </span>
                 </template>
               </el-table-column>
-              <el-table-column class-name="cost-column" :width="140">
-                <template slot-scope="scope">
-                  <span>
-                    {{ scope.row.cost | price }}
-                  </span>
-                </template>
-              </el-table-column>
+              <cost-column></cost-column>
               <el-table-column class-name="cost-column" :width="70">
                 <template slot-scope="scope">
                   <el-button
@@ -132,19 +127,26 @@
     <br />
     <br />
     <br />
+    <!-- <div>{{ goods }}</div> -->
+    <br />
+    <br />
     <!-- <div>{{ goodsParsed }}</div> -->
-    <br />
-    <br />
-    <!-- <div>{{ activeGroups }}</div> -->
   </div>
 </template>
 
 <script>
+import CostColumn from "@/components/CostColumn.vue";
 import Vue from "vue";
 import names from "@/data/names.json";
-import { Value } from "@/data/data.json";
+// import { Value } from "@/data/data.json";
 
 export default {
+  beforeDestroy() {
+    clearInterval(this.getJsonInterval);
+  },
+  components: {
+    CostColumn
+  },
   computed: {
     totalCost: function() {
       return this.cart.items.reduce(
@@ -166,12 +168,27 @@ export default {
           id: el.T,
           idGroup: el.G,
           inStockQuantity: el.P,
-          name: this.names[el.G].B[el.T].N
+          name: this.names[el.G].B[el.T].N,
+          priceStatus: 0
         });
       });
 
       return result;
     }
+  },
+  async created() {
+    await this.getJsonData();
+    Object.keys(this.goodsParsed).forEach((el, index) => {
+      Vue.set(this.activeGroups, index, +el);
+    });
+    // this.getJsonData();
+    this.getJsonInterval = setInterval(
+      function() {
+        // console.log("-------------------------");
+        this.getJsonData();
+      }.bind(this),
+      3000
+    );
   },
   data() {
     return {
@@ -180,18 +197,14 @@ export default {
         items: [],
         totalCost: this.totalCost
       },
-      goods: Value.Goods,
+      getJsonInterval: null,
+      goods: [],
       names: names,
       rates: {
         USD: 76
       },
       settingsForm: {}
     };
-  },
-  created() {
-    Object.keys(this.goodsParsed).forEach((el, index) => {
-      Vue.set(this.activeGroups, index, +el);
-    });
   },
   methods: {
     addToCart(good) {
@@ -204,14 +217,60 @@ export default {
         quantity: 1
       });
     },
+    // cellClassName({ row, column, rowIndex, columnIndex }) {
+    // cellClassName({ row, columnIndex }) {
+    //   // console.log(row, column, rowIndex, columnIndex);
+    //   if (columnIndex == 1 && row.priceStatus == 1) {
+    //     return "cost-column cost-column_price_up";
+    //   }
+    //   if (columnIndex == 1 && row.priceStatus == -1) {
+    //     return "cost-column cost-column_price_down";
+    //   }
+    //   if (columnIndex == 1) {
+    //     return "cost-column";
+    //   }
+    //   return "";
+    // },
     convertToRub(val = 0) {
-      return val * this.rates.USD;
+      return (val * this.rates.USD).toFixed(2);
     },
     deleteFromCart(good) {
       this.cart.items = this.cart.items.filter(el => el.id != good.id);
+    },
+    async getJsonData() {
+      let list = await this.$axios.get("/data.json");
+      let goods = list.data.Value.Goods.map(el => {
+        // let good = this.goods.find(good => good.T == el.T);
+        // el.priceStatus =
+        //   (!good && "0") ||
+        //   Math.sign(this.convertToRub(el.C) - this.convertToRub(good.C));
+        el.C = 0.01 + (2 * el.C - 0.01) * Math.random();
+        return el;
+      });
+      // this.goods = list.data.Value.Goods;
+      this.goods = goods;
+      // return;
     }
+    // goodsChanges(value, oldValue) {
+    //   console.log(value);
+    //   console.log(oldValue);
+    //   // oldValue = oldValue.map(el => {
+    //   //   let good = value.find(good => good.T == el.T);
+    //   //   el.priceStatus =
+    //   //     (!good && "0") ||
+    //   //     Math.sign(this.convertToRub(el.C) - this.convertToRub(good.C));
+    //   //   return el;
+    //   // });
+    //   // return oldValue;
+    // }
   },
   name: "PageHome"
+  // watch: {
+  //   goodsParsed: {
+  //     deep: true,
+  //     handler: "goodsChanges"
+  //   }
+  // }
 };
 </script>
 
@@ -219,6 +278,12 @@ export default {
 .cost-column
   background: $color-info
   font-weight: 700
+
+.cost-column_price_up
+  background: $color-error
+
+.cost-column_price_down
+  background: $color-success
 
 .group-header .el-collapse-item__header
   background-color: $color-primary
