@@ -1,7 +1,33 @@
 <template>
   <div>
-    <el-row :gutter="10">
+    <el-row class="settings-group" :gutter="10">
+      <el-divider content-position="left">Настройки</el-divider>
       <el-col :span="12">
+        <el-form
+          :model="settingsForm"
+          @submit.native.prevent
+          label-width=""
+          ref="settingsForm"
+        >
+          <el-form-item label="Курс доллара">
+            <el-input-number
+              :max="80"
+              :min="20"
+              :precision="0"
+              :step="1"
+              placeholder="Введите курс"
+              step-strictly
+              type="number"
+              v-model="rates.USD"
+            ></el-input-number>
+          </el-form-item>
+        </el-form>
+      </el-col>
+    </el-row>
+    <el-row :gutter="10">
+      <el-divider content-position="left">Товары и покупки</el-divider>
+      <el-col :span="12">
+        <div>Товары</div>
         <el-collapse @change="() => {}" v-model="activeGroups">
           <el-collapse-item
             :key="group.id"
@@ -49,6 +75,7 @@
         </el-collapse>
       </el-col>
       <el-col :span="12">
+        <div>Корзина покупок</div>
         <el-table :data="cart.items" style="width: 100%">
           <el-table-column label="Наименование товара и описание">
             <template slot-scope="scope">
@@ -60,14 +87,27 @@
           <el-table-column label="Количество">
             <template slot-scope="scope">
               <el-input
+                :max="scope.row.inStockQuantity"
+                :min="1"
+                :precision="0"
+                :step="1"
                 placeholder="Введите количество"
+                step-strictly
+                type="number"
                 v-model="scope.row.quantity"
               >
                 <template slot="append">шт.</template>
               </el-input>
+              <el-alert
+                :closable="false"
+                description="Количество ограничено"
+                show-icon
+                type="warning"
+                v-show="scope.row.quantity > scope.row.inStockQuantity - 1"
+              ></el-alert>
             </template>
           </el-table-column>
-          <el-table-column label="Цена">
+          <el-table-column :width="150" label="Цена">
             <template slot-scope="scope">
               <span>
                 <strong>{{ scope.row.cost | price }}.</strong> / шт.
@@ -143,8 +183,9 @@ export default {
       goods: Value.Goods,
       names: names,
       rates: {
-        USD: 78
-      }
+        USD: 76
+      },
+      settingsForm: {}
     };
   },
   created() {
@@ -158,6 +199,7 @@ export default {
         cost: good.cost,
         groupName: this.names[good.idGroup].G,
         id: good.id,
+        inStockQuantity: good.inStockQuantity,
         name: good.name,
         quantity: 1
       });
@@ -183,6 +225,12 @@ export default {
   font-weight: 700
   padding-left: 10px
 
+.settings-group
+  margin: 40px 0
+  text-align: left
+
 .total-cost
   margin-top: 40px
+  b
+    color: #F56C6C
 </style>
