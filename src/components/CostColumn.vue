@@ -23,20 +23,20 @@ export default {
   name: "CostColumn",
   props: {},
   watch: {
-    cost: {
-      handler: function(newCost, oldCost) {
-        let className = "cost-column";
-        let priceStatus = Math.sign(newCost - oldCost);
-        if (priceStatus == 1 && oldCost != 0) {
-          className = "cost-column cost-column_price_up";
-        }
-        if (priceStatus == -1 && oldCost != 0) {
-          className = "cost-column cost-column_price_down";
-        }
-        this.className = className;
-      }
-      // deep: true
-    }
+    // cost: {
+    //   handler: function(newCost, oldCost) {
+    //     let className = "cost-column";
+    //     let priceStatus = Math.sign(newCost - oldCost);
+    //     if (priceStatus == 1 && oldCost != 0) {
+    //       className = "cost-column cost-column_price_up";
+    //     }
+    //     if (priceStatus == -1 && oldCost != 0) {
+    //       className = "cost-column cost-column_price_down";
+    //     }
+    //     this.className = className;
+    //   }
+    //   // deep: true
+    // }
   }
 };
 </script>

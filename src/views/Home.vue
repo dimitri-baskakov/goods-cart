@@ -20,6 +20,12 @@
               type="number"
               v-model="rates.USD"
             ></el-input-number>
+            <el-form-item label="Генерация случайных цен">
+              <el-switch v-model="settingsForm.randomMode"></el-switch>
+            </el-form-item>
+            <el-form-item label="Режим редактирования">
+              <el-switch v-model="settingsForm.editMode"></el-switch>
+            </el-form-item>
           </el-form-item>
         </el-form>
       </el-col>
@@ -37,7 +43,16 @@
             v-for="group in goodsParsed"
           >
             <!-- :cell-class-name="cellClassName" -->
-            <el-table
+            <!-- {{ group.children }} -->
+            <goods-group
+              :cart="cart"
+              :data="group.children"
+              :settings-form="settingsForm"
+              :names="names"
+              :rates="rates"
+            >
+            </goods-group>
+            <!-- <el-table
               :data="group.children"
               :show-header="false"
               border
@@ -65,7 +80,7 @@
                   ></el-button>
                 </template>
               </el-table-column>
-            </el-table>
+            </el-table> -->
           </el-collapse-item>
         </el-collapse>
       </el-col>
@@ -135,7 +150,8 @@
 </template>
 
 <script>
-import CostColumn from "@/components/CostColumn.vue";
+// import CostColumn from "@/components/CostColumn.vue";
+import GoodsGroup from "@/components/GoodsGroup.vue";
 import Vue from "vue";
 import names from "@/data/names.json";
 // import { Value } from "@/data/data.json";
@@ -145,7 +161,8 @@ export default {
     clearInterval(this.getJsonInterval);
   },
   components: {
-    CostColumn
+    // CostColumn,
+    GoodsGroup
   },
   computed: {
     totalCost: function() {
@@ -181,13 +198,11 @@ export default {
     Object.keys(this.goodsParsed).forEach((el, index) => {
       Vue.set(this.activeGroups, index, +el);
     });
-    // this.getJsonData();
     this.getJsonInterval = setInterval(
       function() {
-        // console.log("-------------------------");
         this.getJsonData();
       }.bind(this),
-      3000
+      this.settingsForm.updateInterval
     );
   },
   data() {
@@ -203,7 +218,11 @@ export default {
       rates: {
         USD: 76
       },
-      settingsForm: {}
+      settingsForm: {
+        editMode: false,
+        randomMode: false,
+        updateInterval: 15000
+      }
     };
   },
   methods: {
@@ -238,18 +257,20 @@ export default {
       this.cart.items = this.cart.items.filter(el => el.id != good.id);
     },
     async getJsonData() {
-      let list = await this.$axios.get("/data.json");
-      let goods = list.data.Value.Goods.map(el => {
-        // let good = this.goods.find(good => good.T == el.T);
-        // el.priceStatus =
-        //   (!good && "0") ||
-        //   Math.sign(this.convertToRub(el.C) - this.convertToRub(good.C));
-        el.C = 0.01 + (2 * el.C - 0.01) * Math.random();
-        return el;
-      });
-      // this.goods = list.data.Value.Goods;
+      let data = await this.$axios.get("/data.json");
+      let goods = data.data.Value.Goods;
+      if (this.settingsForm.randomMode) {
+        console.log("---getJsonData---", new Date());
+        goods = goods.map(el => {
+          // let good = this.goods.find(good => good.T == el.T);
+          // el.priceStatus =
+          //   (!good && "0") ||
+          //   Math.sign(this.convertToRub(el.C) - this.convertToRub(good.C));
+          el.C = 0.01 + (2 * el.C - 0.01) * Math.random();
+          return el;
+        });
+      }
       this.goods = goods;
-      // return;
     }
     // goodsChanges(value, oldValue) {
     //   console.log(value);
