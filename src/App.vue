@@ -17,12 +17,14 @@ export default {
 
 <style lang="sass">
 #app
-  font-family: "Avenir", Helvetica, Arial, sans-serif
-  -webkit-font-smoothing: antialiased
   -moz-osx-font-smoothing: grayscale
-  text-align: center
+  -webkit-font-smoothing: antialiased
   color: #2c3e50
-  margin-top: 60px
+  font-family: "Avenir", Helvetica, Arial, sans-serif
+  margin: 0 auto
+  max-width: 1900px
+  padding: 50px 0
+  text-align: center
 
 .nav
   margin-bottom: 40px

@@ -2,11 +2,11 @@
   <div>
     <el-row class="settings-group" :gutter="10">
       <el-divider content-position="left">Настройки</el-divider>
-      <el-col :span="12">
+      <el-col :span="24">
         <el-form
           :model="settingsForm"
           @submit.native.prevent
-          label-width=""
+          label-width="200px"
           ref="settingsForm"
         >
           <el-form-item label="Курс доллара">
@@ -20,21 +20,20 @@
               type="number"
               v-model="rates.USD"
             ></el-input-number>
-            <el-form-item label="Генерация случайных цен">
-              <el-switch v-model="settingsForm.randomMode"></el-switch>
-            </el-form-item>
-            <el-form-item label="Режим редактирования">
-              <el-switch v-model="settingsForm.editMode"></el-switch>
-            </el-form-item>
+          </el-form-item>
+          <el-form-item label="Генерация случайных цен">
+            <el-switch v-model="settingsForm.randomMode"></el-switch>
+          </el-form-item>
+          <el-form-item label="Режим редактирования">
+            <el-switch v-model="settingsForm.editMode"></el-switch>
           </el-form-item>
         </el-form>
       </el-col>
     </el-row>
     <el-row :gutter="10">
-      <el-divider content-position="left">Товары и покупки</el-divider>
-      <el-col :span="12">
-        <div>Товары</div>
-        <el-collapse @change="() => {}" v-model="activeGroups">
+      <el-col :xs="24" :sm="24" :md="12">
+        <el-divider content-position="left">Товары</el-divider>
+        <el-collapse v-model="activeGroups">
           <el-collapse-item
             :key="group.id"
             :name="group.id"
@@ -42,50 +41,18 @@
             class="group-header"
             v-for="group in goodsParsed"
           >
-            <!-- :cell-class-name="cellClassName" -->
-            <!-- {{ group.children }} -->
             <goods-group
               :cart="cart"
               :data="group.children"
-              :settings-form="settingsForm"
               :names="names"
               :rates="rates"
-            >
-            </goods-group>
-            <!-- <el-table
-              :data="group.children"
-              :show-header="false"
-              border
-              style="width: 100%"
-            >
-              <el-table-column>
-                <template slot-scope="scope">
-                  <span>
-                    {{ scope.row.name }} ({{ scope.row.inStockQuantity }})
-                  </span>
-                </template>
-              </el-table-column>
-              <cost-column></cost-column>
-              <el-table-column class-name="cost-column" :width="70">
-                <template slot-scope="scope">
-                  <el-button
-                    :disabled="cart.items.some(el => el.id == scope.row.id)"
-                    :icon="
-                      cart.items.some(el => el.id == scope.row.id)
-                        ? `el-icon-shopping-cart-full`
-                        : `el-icon-shopping-cart-2`
-                    "
-                    @click="addToCart(scope.row)"
-                    circle
-                  ></el-button>
-                </template>
-              </el-table-column>
-            </el-table> -->
+              :settings-form="settingsForm"
+            ></goods-group>
           </el-collapse-item>
         </el-collapse>
       </el-col>
-      <el-col :span="12">
-        <div>Корзина покупок</div>
+      <el-col :xs="24" :sm="24" :md="12">
+        <el-divider content-position="left">Корзина покупок</el-divider>
         <el-table :data="cart.items" style="width: 100%">
           <el-table-column label="Наименование товара и описание">
             <template slot-scope="scope">
@@ -106,18 +73,20 @@
                 type="number"
                 v-model="scope.row.quantity"
               >
-                <template slot="append">шт.</template>
+                <template slot="append">
+                  <span>шт.</span>
+                </template>
               </el-input>
               <el-alert
                 :closable="false"
                 description="Количество ограничено"
                 show-icon
                 type="warning"
-                v-show="scope.row.quantity > scope.row.inStockQuantity - 1"
+                v-show="isQuantityLimited(scope.row)"
               ></el-alert>
             </template>
           </el-table-column>
-          <el-table-column :width="150" label="Цена">
+          <el-table-column :width="100" label="Цена">
             <template slot-scope="scope">
               <span>
                 <strong>{{ scope.row.cost | price }}.</strong> / шт.
@@ -128,8 +97,8 @@
             <template slot-scope="scope">
               <el-button
                 @click="deleteFromCart(scope.row)"
-                icon="el-icon-delete"
                 circle
+                icon="el-icon-delete"
               ></el-button>
             </template>
           </el-table-column>
@@ -139,38 +108,24 @@
         </div>
       </el-col>
     </el-row>
-    <br />
-    <br />
-    <br />
-    <!-- <div>{{ goods }}</div> -->
-    <br />
-    <br />
-    <!-- <div>{{ goodsParsed }}</div> -->
   </div>
 </template>
 
 <script>
-// import CostColumn from "@/components/CostColumn.vue";
 import GoodsGroup from "@/components/GoodsGroup.vue";
 import Vue from "vue";
 import names from "@/data/names.json";
-// import { Value } from "@/data/data.json";
 
 export default {
   beforeDestroy() {
+    // delete interval timers for periodically getting data.json
     clearInterval(this.getJsonInterval);
   },
   components: {
-    // CostColumn,
     GoodsGroup
   },
   computed: {
-    totalCost: function() {
-      return this.cart.items.reduce(
-        (acc, currItem) => acc + currItem.quantity * currItem.cost,
-        0
-      );
-    },
+    // object - structure for collect tree-like grouped goods
     goodsParsed: function() {
       let result = {};
       this.goods.forEach(el => {
@@ -181,7 +136,7 @@ export default {
             name: this.names[el.G].G
           });
         result[el.G].children.push({
-          cost: this.convertToRub(el.C),
+          cost: this.$options.filters.convertToRub(el.C, this.rates.USD),
           id: el.T,
           idGroup: el.G,
           inStockQuantity: el.P,
@@ -189,15 +144,25 @@ export default {
           priceStatus: 0
         });
       });
-
       return result;
+    },
+    totalCost: function() {
+      return this.cart.items.reduce(
+        (acc, currItem) => acc + currItem.quantity * currItem.cost,
+        0
+      );
     }
   },
   async created() {
+    // initial getting data from data.json
     await this.getJsonData();
+
+    // initial expand all groups of goods
     Object.keys(this.goodsParsed).forEach((el, index) => {
       Vue.set(this.activeGroups, index, +el);
     });
+
+    // Getting data from data.json at an interval of settingsForm.updateInterval ms
     this.getJsonInterval = setInterval(
       function() {
         this.getJsonData();
@@ -209,8 +174,7 @@ export default {
     return {
       activeGroups: [],
       cart: {
-        items: [],
-        totalCost: this.totalCost
+        items: []
       },
       getJsonInterval: null,
       goods: [],
@@ -226,86 +190,31 @@ export default {
     };
   },
   methods: {
-    addToCart(good) {
-      this.cart.items.push({
-        cost: good.cost,
-        groupName: this.names[good.idGroup].G,
-        id: good.id,
-        inStockQuantity: good.inStockQuantity,
-        name: good.name,
-        quantity: 1
-      });
-    },
-    // cellClassName({ row, column, rowIndex, columnIndex }) {
-    // cellClassName({ row, columnIndex }) {
-    //   // console.log(row, column, rowIndex, columnIndex);
-    //   if (columnIndex == 1 && row.priceStatus == 1) {
-    //     return "cost-column cost-column_price_up";
-    //   }
-    //   if (columnIndex == 1 && row.priceStatus == -1) {
-    //     return "cost-column cost-column_price_down";
-    //   }
-    //   if (columnIndex == 1) {
-    //     return "cost-column";
-    //   }
-    //   return "";
-    // },
-    convertToRub(val = 0) {
-      return (val * this.rates.USD).toFixed(2);
-    },
     deleteFromCart(good) {
       this.cart.items = this.cart.items.filter(el => el.id != good.id);
     },
+    // getting data.json
     async getJsonData() {
       let data = await this.$axios.get("/data.json");
       let goods = data.data.Value.Goods;
       if (this.settingsForm.randomMode) {
         console.log("---getJsonData---", new Date());
         goods = goods.map(el => {
-          // let good = this.goods.find(good => good.T == el.T);
-          // el.priceStatus =
-          //   (!good && "0") ||
-          //   Math.sign(this.convertToRub(el.C) - this.convertToRub(good.C));
           el.C = 0.01 + (2 * el.C - 0.01) * Math.random();
           return el;
         });
       }
       this.goods = goods;
+    },
+    isQuantityLimited(good) {
+      return good.quantity > good.inStockQuantity - 1;
     }
-    // goodsChanges(value, oldValue) {
-    //   console.log(value);
-    //   console.log(oldValue);
-    //   // oldValue = oldValue.map(el => {
-    //   //   let good = value.find(good => good.T == el.T);
-    //   //   el.priceStatus =
-    //   //     (!good && "0") ||
-    //   //     Math.sign(this.convertToRub(el.C) - this.convertToRub(good.C));
-    //   //   return el;
-    //   // });
-    //   // return oldValue;
-    // }
   },
   name: "PageHome"
-  // watch: {
-  //   goodsParsed: {
-  //     deep: true,
-  //     handler: "goodsChanges"
-  //   }
-  // }
 };
 </script>
 
 <style lang="sass">
-.cost-column
-  background: $color-info
-  font-weight: 700
-
-.cost-column_price_up
-  background: $color-error
-
-.cost-column_price_down
-  background: $color-success
-
 .group-header .el-collapse-item__header
   background-color: $color-primary
   font-weight: 700

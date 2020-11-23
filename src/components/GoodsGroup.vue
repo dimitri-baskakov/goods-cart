@@ -19,18 +19,17 @@
         </span>
       </template>
     </el-table-column>
-    <!-- <cost-column></cost-column> -->
-    <el-table-column :class-name="className" :width="140">
+    <el-table-column :class-name="className" :width="110">
       <template slot-scope="scope">
         <span> {{ scope.row.cost | price }} </span>
       </template>
     </el-table-column>
-    <el-table-column class-name="cost-column" :width="70">
+    <el-table-column class-name="cost-column" :width="65">
       <template slot-scope="scope">
         <el-button
-          :disabled="cart.items.some(el => el.id == scope.row.id)"
+          :disabled="alreadyInCart(scope.row.id)"
           :icon="
-            cart.items.some(el => el.id == scope.row.id)
+            alreadyInCart(scope.row.id)
               ? `el-icon-shopping-cart-full`
               : `el-icon-shopping-cart-2`
           "
@@ -43,12 +42,7 @@
 </template>
 
 <script>
-// import CostColumn from "@/components/CostColumn.vue";
-
 export default {
-  components: {
-    // CostColumn
-  },
   data() {
     return {
       className: "",
@@ -56,6 +50,7 @@ export default {
     };
   },
   methods: {
+    // Adding goods in the cart
     addToCart(good) {
       this.cart.items.push({
         cost: good.cost,
@@ -66,8 +61,11 @@ export default {
         quantity: 1
       });
     },
+    alreadyInCart(goodId) {
+      return this.cart.items.some(el => el.id == goodId);
+    },
+    // Coloring cells when price is up or down
     cellClassName({ row, columnIndex }) {
-      // console.log(row, column, rowIndex, columnIndex);
       if (columnIndex == 1 && row.priceStatus == 1) {
         return "cost-column cost-column_price_up";
       }
@@ -78,16 +76,9 @@ export default {
         return "cost-column";
       }
       return "";
-    },
-    // compare(val) {
-    //   this.cost = val;
-    //   return val;
-    // }
-    convertToRub(val = 0) {
-      return (val * this.rates.USD).toFixed(2);
     }
   },
-  name: "CostColumn",
+  name: "GoodsGroup",
   props: {
     cart: Object,
     data: Array,
@@ -96,6 +87,8 @@ export default {
     settingsForm: Object
   },
   watch: {
+    // watch data and recalculate priceStatus
+    // 1 price is up, -1 price is down, 0 price don't changed
     data: {
       handler: function(newData, oldData) {
         newData = newData.map(el => {
@@ -103,39 +96,26 @@ export default {
           el.priceStatus =
             (!good && "0") ||
             Math.sign(
-              this.convertToRub(el.cost) - this.convertToRub(good.cost)
+              this.$options.filters.convertToRub(el.cost, this.rates.USD) -
+                this.$options.filters.convertToRub(good.cost, this.rates.USD)
             );
           return el;
         });
       },
       deep: true
     }
-    // cost: {
-    //   handler: function(newCost, oldCost) {
-    //     let className = "cost-column";
-    //     let priceStatus = Math.sign(newCost - oldCost);
-    //     if (priceStatus == 1 && oldCost != 0) {
-    //       className = "cost-column cost-column_price_up";
-    //     }
-    //     if (priceStatus == -1 && oldCost != 0) {
-    //       className = "cost-column cost-column_price_down";
-    //     }
-    //     this.className = className;
-    //   }
-    //   // deep: true
-    // }
   }
 };
 </script>
 
-<style scoped lang="sass">
-// .cost-column
-//   background: $color-info
-//   font-weight: 700
+<style lang="sass">
+.cost-column
+  background: $color-info
+  font-weight: 700
 
-// .cost-column_price_up
-//   background: $color-error
+.cost-column_price_up
+  background: $color-error
 
-// .cost-column_price_down
-//   background: $color-success
+.cost-column_price_down
+  background: $color-success
 </style>
