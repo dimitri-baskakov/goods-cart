@@ -1,6 +1,6 @@
 <template>
   <div class="about">
-    <h1>Описание</h1>
+    <h1>{{ $t("description") }}</h1>
     <p>
       Получить данные из файла data.json и вывести их на страницу как это
       показано на рис."пример.png".
@@ -55,3 +55,11 @@
 .description-image
   width: 100%
 </style>
+
+<i18n>
+{
+  "ru": {
+    "description": "Описание"
+  }
+}
+</i18n>

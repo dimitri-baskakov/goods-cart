@@ -19,7 +19,7 @@
         </span>
       </template>
     </el-table-column>
-    <el-table-column :class-name="className" :width="110">
+    <el-table-column :width="110">
       <template slot-scope="scope">
         <span> {{ scope.row.cost | price }} </span>
       </template>
@@ -44,10 +44,7 @@
 <script>
 export default {
   data() {
-    return {
-      className: "",
-      cost: 0
-    };
+    return {};
   },
   methods: {
     // Adding goods in the cart
@@ -64,13 +61,13 @@ export default {
     alreadyInCart(goodId) {
       return this.cart.items.some(el => el.id == goodId);
     },
-    // Coloring cells when price is up or down
+    // Coloring cells when cost is up or down
     cellClassName({ row, columnIndex }) {
-      if (columnIndex == 1 && row.priceStatus == 1) {
-        return "cost-column cost-column_price_up";
+      if (columnIndex == 1 && row.costStatus == 1) {
+        return "cost-column cost-column_cost_up";
       }
-      if (columnIndex == 1 && row.priceStatus == -1) {
-        return "cost-column cost-column_price_down";
+      if (columnIndex == 1 && row.costStatus == -1) {
+        return "cost-column cost-column_cost_down";
       }
       if (columnIndex == 1) {
         return "cost-column";
@@ -87,13 +84,13 @@ export default {
     settingsForm: Object
   },
   watch: {
-    // watch data and recalculate priceStatus
-    // 1 price is up, -1 price is down, 0 price don't changed
+    // watch data and recalculate costStatus
+    // 1 cost is up, -1 cost is down, 0 cost don't changed
     data: {
       handler: function(newData, oldData) {
         newData = newData.map(el => {
           let good = oldData.find(good => good.id == el.id);
-          el.priceStatus =
+          el.costStatus =
             (!good && "0") ||
             Math.sign(
               this.$options.filters.convertToRub(el.cost, this.rates.USD) -
@@ -113,9 +110,9 @@ export default {
   background: $color-info
   font-weight: 700
 
-.cost-column_price_up
+.cost-column_cost_up
   background: $color-error
 
-.cost-column_price_down
+.cost-column_cost_down
   background: $color-success
 </style>

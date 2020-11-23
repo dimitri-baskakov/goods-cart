@@ -1,8 +1,8 @@
 <template>
   <div id="app">
     <div class="nav">
-      <router-link to="/">Главная</router-link> |
-      <router-link to="/about">О проекте</router-link>
+      <router-link to="/">{{ $t("pages.main") }}</router-link> |
+      <router-link to="/about">{{ $t("pages.about") }}</router-link>
     </div>
 
     <router-view></router-view>

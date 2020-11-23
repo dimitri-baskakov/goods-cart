@@ -6,6 +6,7 @@ module.exports = {
       }
     }
   },
+
   css: {
     loaderOptions: {
       sass: {
@@ -14,6 +15,15 @@ module.exports = {
         },
         prependData: `@import "@/css/_variables.sass"`
       }
+    }
+  },
+
+  pluginOptions: {
+    i18n: {
+      locale: "ru",
+      fallbackLocale: "en",
+      localeDir: "locales",
+      enableInSFC: true
     }
   }
 };

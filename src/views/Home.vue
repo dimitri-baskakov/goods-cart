@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-row class="settings-group" :gutter="10">
-      <el-divider content-position="left">Настройки</el-divider>
+      <el-divider content-position="left">{{ $t("settings") }}</el-divider>
       <el-col :span="24">
         <el-form
           :model="settingsForm"
@@ -9,22 +9,22 @@
           label-width="200px"
           ref="settingsForm"
         >
-          <el-form-item label="Курс доллара">
+          <el-form-item :label="$t('rate.usd')">
             <el-input-number
               :max="80"
               :min="20"
+              :placeholder="$t('rate.enter')"
               :precision="2"
               :step="0.01"
-              placeholder="Введите курс"
               step-strictly
               type="number"
               v-model="rates.USD"
             ></el-input-number>
           </el-form-item>
-          <el-form-item label="Генерация случайных цен">
+          <el-form-item :label="$t('cost.randomGeneration')">
             <el-switch v-model="settingsForm.randomMode"></el-switch>
           </el-form-item>
-          <el-form-item label="Режим редактирования">
+          <el-form-item :label="$t('editMode')">
             <el-switch v-model="settingsForm.editMode"></el-switch>
           </el-form-item>
         </el-form>
@@ -32,7 +32,7 @@
     </el-row>
     <el-row :gutter="10">
       <el-col :xs="24" :sm="24" :md="12">
-        <el-divider content-position="left">Товары</el-divider>
+        <el-divider content-position="left">{{ $t("goods.label") }}</el-divider>
         <el-collapse v-model="activeGroups">
           <el-collapse-item
             :key="group.id"
@@ -52,23 +52,25 @@
         </el-collapse>
       </el-col>
       <el-col :xs="24" :sm="24" :md="12">
-        <el-divider content-position="left">Корзина покупок</el-divider>
+        <el-divider content-position="left">{{
+          $t("shoppingCart")
+        }}</el-divider>
         <el-table :data="cart.items" style="width: 100%">
-          <el-table-column label="Наименование товара и описание">
+          <el-table-column :label="$t('goods.nameAndDescription')">
             <template slot-scope="scope">
               <span>
                 <strong>{{ scope.row.groupName }}.</strong> {{ scope.row.name }}
               </span>
             </template>
           </el-table-column>
-          <el-table-column label="Количество">
+          <el-table-column :label="$t('quantity.label')">
             <template slot-scope="scope">
               <el-input
                 :max="scope.row.inStockQuantity"
                 :min="1"
+                :placeholder="$t('quantity.enter')"
                 :precision="0"
                 :step="1"
-                placeholder="Введите количество"
                 step-strictly
                 type="number"
                 v-model="scope.row.quantity"
@@ -79,17 +81,17 @@
               </el-input>
               <el-alert
                 :closable="false"
-                description="Количество ограничено"
+                :description="$t('quantity.isLimited')"
                 show-icon
                 type="warning"
                 v-show="isQuantityLimited(scope.row)"
               ></el-alert>
             </template>
           </el-table-column>
-          <el-table-column :width="100" label="Цена">
+          <el-table-column :label="$t('cost.label')" :width="100">
             <template slot-scope="scope">
               <span>
-                <strong>{{ scope.row.cost | price }}.</strong> / шт.
+                <strong>{{ scope.row.cost | price }}.</strong> / {{ $t("pcs") }}
               </span>
             </template>
           </el-table-column>
@@ -104,7 +106,7 @@
           </el-table-column>
         </el-table>
         <div class="total-cost">
-          Общая сумма: <b>{{ totalCost | price }}</b>
+          {{ $t("cost.total") }}: <b>{{ totalCost | price }}</b>
         </div>
       </el-col>
     </el-row>
@@ -141,7 +143,7 @@ export default {
           idGroup: el.G,
           inStockQuantity: el.P,
           name: this.names[el.G].B[el.T].N,
-          priceStatus: 0
+          costStatus: 0
         });
       });
       return result;
