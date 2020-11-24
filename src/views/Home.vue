@@ -33,6 +33,7 @@
     <el-row :gutter="10">
       <el-col :xs="24" :sm="24" :md="12">
         <el-divider content-position="left">{{ $t("goods.label") }}</el-divider>
+        <div v-if="errorGettingData">{{ errorGettingData }}</div>
         <el-collapse v-model="activeGroups">
           <el-collapse-item
             :key="group.id"
@@ -42,23 +43,26 @@
             v-for="group in goodsParsed"
           >
             <goods-group
-              :cart="cart"
               :data="group.children"
-              :names="names"
               :rates="rates"
               :settings-form="settingsForm"
+              @addToCart="addToCart"
             ></goods-group>
           </el-collapse-item>
         </el-collapse>
       </el-col>
       <el-col :xs="24" :sm="24" :md="12">
         <el-divider content-position="left">{{
-          $t("shoppingCart")
+          $t("shoppingCart.label")
         }}</el-divider>
-        <el-table :data="cart.items" style="width: 100%">
+        <el-table
+          :data="cart.items"
+          :empty-text="$t('shoppingCart.empty')"
+          style="width: 100%"
+        >
           <el-table-column :label="$t('goods.nameAndDescription')">
             <template slot-scope="scope">
-              <span>
+              <span class="product-name">
                 <strong>{{ scope.row.groupName }}.</strong> {{ scope.row.name }}
               </span>
             </template>
@@ -178,6 +182,7 @@ export default {
       cart: {
         items: []
       },
+      errorGettingData: "",
       getJsonInterval: null,
       goods: [],
       names: names,
@@ -192,13 +197,31 @@ export default {
     };
   },
   methods: {
+    // Adding goods in the cart
+    addToCart(good) {
+      let goodIndex = this.cart.items.findIndex(el => el.id == good.id);
+      if (goodIndex !== -1) {
+        this.cart.items[goodIndex].quantity += 1;
+      } else if (good) {
+        this.cart.items.push({
+          cost: good.cost,
+          groupName: this.names[good.idGroup].G,
+          id: good.id,
+          inStockQuantity: good.inStockQuantity,
+          name: good.name,
+          quantity: 1
+        });
+      }
+    },
     deleteFromCart(good) {
       this.cart.items = this.cart.items.filter(el => el.id != good.id);
     },
     // getting data.json
     async getJsonData() {
       let data = await this.$axios.get("/data.json");
-      let goods = data.data.Value.Goods;
+      this.errorGettingData =
+        !data.data.Success && (data.data.Error || this.$t("error.gettingData"));
+      let goods = (data.data.Success && data.data.Value.Goods) || [];
       if (this.settingsForm.randomMode) {
         console.log("---getJsonData---", new Date());
         goods = goods.map(el => {

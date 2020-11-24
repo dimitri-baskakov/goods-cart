@@ -4,7 +4,7 @@
     :data="data"
     :show-header="false"
     border
-    style="width: 100%"
+    class="goods-table"
   >
     <el-table-column>
       <template slot-scope="scope">
@@ -27,14 +27,10 @@
     <el-table-column class-name="cost-column" :width="65">
       <template slot-scope="scope">
         <el-button
-          :disabled="alreadyInCart(scope.row.id)"
-          :icon="
-            alreadyInCart(scope.row.id)
-              ? `el-icon-shopping-cart-full`
-              : `el-icon-shopping-cart-2`
-          "
+          :icon="`el-icon-shopping-cart-2`"
           @click="addToCart(scope.row)"
           circle
+          class="add-to-cart-btn"
         ></el-button>
       </template>
     </el-table-column>
@@ -47,19 +43,8 @@ export default {
     return {};
   },
   methods: {
-    // Adding goods in the cart
     addToCart(good) {
-      this.cart.items.push({
-        cost: good.cost,
-        groupName: this.names[good.idGroup].G,
-        id: good.id,
-        inStockQuantity: good.inStockQuantity,
-        name: good.name,
-        quantity: 1
-      });
-    },
-    alreadyInCart(goodId) {
-      return this.cart.items.some(el => el.id == goodId);
+      this.$emit("addToCart", good);
     },
     // Coloring cells when cost is up or down
     cellClassName({ row, columnIndex }) {
@@ -77,9 +62,7 @@ export default {
   },
   name: "GoodsGroup",
   props: {
-    cart: Object,
     data: Array,
-    names: Object,
     rates: Object,
     settingsForm: Object
   },
@@ -115,4 +98,7 @@ export default {
 
 .cost-column_cost_down
   background: $color-success
+
+.goods-table
+  width: 100%
 </style>
